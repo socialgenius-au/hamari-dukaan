@@ -1,0 +1,90 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models.models import Order, Merchant
+from pydantic import BaseModel
+from typing import Optional, List
+from datetime import datetime
+import os
+
+router = APIRouter(prefix="/orders", tags=["orders"])
+
+class OrderItem(BaseModel):
+    product_id: int
+    name: str
+    price: float
+    qty: int
+    emoji: Optional[str] = "📦"
+
+class OrderCreate(BaseModel):
+    merchant_id: int
+    buyer_name: str
+    buyer_email: str
+    buyer_phone: Optional[str] = None
+    items: List[OrderItem]
+
+class OrderOut(BaseModel):
+    id: int
+    merchant_id: int
+    buyer_name: str
+    buyer_email: str
+    buyer_phone: Optional[str]
+    items: list
+    total: float
+    commission: float
+    merchant_payout: float
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+COMMISSION_RATE = 0.10
+
+@router.post("/", response_model=OrderOut)
+def create_order(order: OrderCreate, db: Session = Depends(get_db)):
+    merchant = db.query(Merchant).filter(Merchant.id == order.merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    total = sum(item.price * item.qty for item in order.items)
+    commission = round(total * COMMISSION_RATE, 2)
+    merchant_payout = round(total - commission, 2)
+    db_order = Order(
+        merchant_id=order.merchant_id,
+        buyer_name=order.buyer_name,
+        buyer_email=order.buyer_email,
+        buyer_phone=order.buyer_phone,
+        items=[item.dict() for item in order.items],
+        total=total,
+        commission=commission,
+        merchant_payout=merchant_payout,
+        status="paid"
+    )
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+    return db_order
+
+@router.get("/merchant/{merchant_id}", response_model=List[OrderOut])
+def get_merchant_orders(merchant_id: int, db: Session = Depends(get_db)):
+    return db.query(Order).filter(
+        Order.merchant_id == merchant_id
+    ).order_by(Order.created_at.desc()).all()
+
+@router.patch("/{order_id}/status")
+def update_order_status(order_id: int, status: str, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if status not in ["paid", "ready", "fulfilled", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    order.status = status
+    db.commit()
+    return {"status": order.status}
+
+@router.get("/{order_id}", response_model=OrderOut)
+def get_order(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return order
