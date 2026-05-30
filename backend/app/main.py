@@ -15,14 +15,8 @@ app = FastAPI(title="Apni Dukaan API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        os.getenv("FRONTEND_URL", "http://localhost:5173"),
-        "https://apnidukaan7.netlify.app",
-        "https://apnidukaan.au",
-        "https://www.apnidukaan.au",
-        "http://localhost:5173"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
