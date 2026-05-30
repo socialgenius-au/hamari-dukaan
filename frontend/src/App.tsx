@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './index.css'
 import { getMerchants, getMerchantProducts, getHappyHours } from './api'
+import Checkout from './Checkout'
 
 // ── STATIC DATA (blogs, reels stay static for now) ─────────
 const blogs = [
@@ -47,6 +48,7 @@ export default function App() {
   const [toast, setToast] = useState('')
   const [toastShow, setToastShow] = useState(false)
   const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [merchants, setMerchants] = useState<Merchant[]>([])
   const [merchantProducts, setMerchantProducts] = useState<Product[]>([])
   const [happyHours, setHappyHours] = useState<HappyHour[]>([])
@@ -188,7 +190,7 @@ export default function App() {
                   <span style={{ fontWeight: 700, fontSize: 15 }}>Total</span>
                   <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--red)' }}>${cartTotal.toFixed(2)}</span>
                 </div>
-                <button className="btn-primary" onClick={() => showToast('Checkout coming soon!')}>Proceed to Checkout</button>
+                <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
               </div>
             </>
           )}
@@ -395,12 +397,24 @@ export default function App() {
                 <span style={{ fontWeight: 700, fontSize: 15 }}>Total</span>
                 <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--red)' }}>${cartTotal.toFixed(2)}</span>
               </div>
-              <button className="btn-primary" onClick={() => showToast('Checkout coming next!')}>Proceed to Checkout</button>
+              <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
             </div>
           </>
         )}
       </div>
 
+      {checkoutOpen && selectedMerchant && (
+        <>
+          <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
+          <div className="bottom-sheet show">
+            <Checkout
+              cart={cart}
+              merchantId={(selectedMerchant as any).id}
+              onClose={() => setCheckoutOpen(false)}
+            />
+          </div>
+        </>
+      )}
       <div className={`toast ${toastShow ? 'show' : ''}`}>{toast}</div>
     </div>
   )

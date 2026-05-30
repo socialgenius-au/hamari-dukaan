@@ -19,6 +19,12 @@ export const getHappyHours = () =>
 export const createOrder = (order: any) =>
   api.post('/orders/', order).then(r => r.data)
 
+export const createCheckout = (data: any) =>
+  api.post('/payments/create-checkout', data).then(r => r.data)
+
+export const getSession = (sessionId: string) =>
+  api.get(`/payments/session/${sessionId}`).then(r => r.data)
+
 export const getArticles = () =>
   api.get('/articles/').then(r => r.data)
 
