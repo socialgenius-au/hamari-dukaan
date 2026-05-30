@@ -195,6 +195,18 @@ export default function App() {
             </>
           )}
         </div>
+        {checkoutOpen && (
+          <>
+            <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
+            <div className="bottom-sheet show">
+              <Checkout
+                cart={cart}
+                merchantId={selectedMerchant!.id}
+                onClose={() => setCheckoutOpen(false)}
+              />
+            </div>
+          </>
+        )}
         <div className={`toast ${toastShow ? 'show' : ''}`}>{toast}</div>
       </div>
     )
