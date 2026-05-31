@@ -234,6 +234,11 @@ def send_order_emails(order, db):
                 payout=order.merchant_payout
             )
     except Exception as e:
+        import sys
+        print(f"Email error: {e}", flush=True)
+        print(f"Email traceback:", flush=True)
+        import traceback
+        traceback.print_exc(file=sys.stdout)
         print(f"Email error: {e}")
 
 @router.post("/webhook")
@@ -248,6 +253,11 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             import json
             event = json.loads(payload)
     except Exception as e:
+        import sys
+        print(f"Email error: {e}", flush=True)
+        print(f"Email traceback:", flush=True)
+        import traceback
+        traceback.print_exc(file=sys.stdout)
         raise HTTPException(status_code=400, detail=str(e))
 
     if event["type"] == "checkout.session.completed":
@@ -301,6 +311,11 @@ def get_session(session_id: str):
             "currency": session.currency.upper()
         }
     except Exception as e:
+        import sys
+        print(f"Email error: {e}", flush=True)
+        print(f"Email traceback:", flush=True)
+        import traceback
+        traceback.print_exc(file=sys.stdout)
         raise HTTPException(status_code=404, detail=str(e))
 
 
