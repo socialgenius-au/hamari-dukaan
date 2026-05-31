@@ -12,8 +12,8 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-CARD_SURCHARGE_PERCENT = 0.017
-CARD_SURCHARGE_FIXED = 0.30
+CARD_SURCHARGE_PERCENT = 0.015
+CARD_SURCHARGE_FIXED = 0.00
 AFTERPAY_SURCHARGE_PERCENT = 0.06
 AFTERPAY_SURCHARGE_FIXED = 0.30
 AFTERPAY_MIN_ORDER = 50.00
@@ -91,7 +91,7 @@ def get_order_summary(req: OrderSummaryRequest, db: Session = Depends(get_db)):
         instalment = round((subtotal + surcharge) / 4, 2)
     else:
         surcharge = round(subtotal * CARD_SURCHARGE_PERCENT + CARD_SURCHARGE_FIXED, 2)
-        surcharge_label = "Card processing fee (1.7% + $0.30)"
+        surcharge_label = "Card processing fee (1.5%)"
         payment_label = "Pay by card"
         instalment = None
         req.payment_method = "card"
@@ -143,7 +143,7 @@ def create_checkout(req: CheckoutRequest, db: Session = Depends(get_db)):
     else:
         surcharge = round(subtotal * CARD_SURCHARGE_PERCENT + CARD_SURCHARGE_FIXED, 2)
         payment_methods = ["card"]
-        surcharge_label = "Card processing fee (1.7% + $0.30)"
+        surcharge_label = "Card processing fee (1.5%)"
         req.payment_method = "card"
 
     total = round(subtotal + surcharge, 2)
