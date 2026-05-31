@@ -74,6 +74,9 @@ class Order(Base):
     merchant_payout = Column(Float, nullable=False)
     payment_method = Column(String, default="card")
     status = Column(String, default="paid")
+    promo_code = Column(String, nullable=True)
+    promo_discount = Column(Float, default=0)
+    ref_code = Column(String, nullable=True)
     stripe_session_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
