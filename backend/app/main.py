@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from app.database import engine, Base
-from app.routers import merchants, products, happyhours, orders
-from app.routers import payments
+from app.routers import merchants, products, happyhours, orders, payments, auth
 import app.models.models as models
 import os
 
@@ -27,6 +26,7 @@ app.include_router(products.router)
 app.include_router(happyhours.router)
 app.include_router(orders.router)
 app.include_router(payments.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def root():
