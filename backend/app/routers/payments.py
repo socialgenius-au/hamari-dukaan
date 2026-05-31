@@ -209,6 +209,33 @@ def create_checkout(req: CheckoutRequest, db: Session = Depends(get_db)):
         "merchant_payout": merchant_payout
     }
 
+def send_order_emails(order, db):
+    try:
+        from app.email_service import send_buyer_confirmation, send_merchant_notification
+        from app.models.models import Merchant
+        merchant = db.query(Merchant).filter(Merchant.id == order.merchant_id).first()
+        if order.buyer_email:
+            send_buyer_confirmation(
+                buyer_email=order.buyer_email,
+                buyer_name=order.buyer_name,
+                order_id=order.id,
+                total=order.total,
+                merchant_name=merchant.name if merchant else "Merchant",
+                merchant_phone=merchant.phone if merchant else ""
+            )
+        if merchant and merchant.email:
+            send_merchant_notification(
+                merchant_email=merchant.email,
+                merchant_name=merchant.name,
+                order_id=order.id,
+                buyer_name=order.buyer_name,
+                buyer_phone=order.buyer_phone or "",
+                total=order.total,
+                payout=order.merchant_payout
+            )
+    except Exception as e:
+        print(f"Email error: {e}")
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
@@ -277,29 +304,3 @@ def get_session(session_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-def send_order_emails(order, db):
-    try:
-        from app.email_service import send_buyer_confirmation, send_merchant_notification
-        from app.models.models import Merchant
-        merchant = db.query(Merchant).filter(Merchant.id == order.merchant_id).first()
-        if order.buyer_email:
-            send_buyer_confirmation(
-                buyer_email=order.buyer_email,
-                buyer_name=order.buyer_name,
-                order_id=order.id,
-                total=order.total,
-                merchant_name=merchant.name if merchant else "Merchant",
-                merchant_phone=merchant.phone if merchant else ""
-            )
-        if merchant and merchant.email:
-            send_merchant_notification(
-                merchant_email=merchant.email,
-                merchant_name=merchant.name,
-                order_id=order.id,
-                buyer_name=order.buyer_name,
-                buyer_phone=order.buyer_phone or "",
-                total=order.total,
-                payout=order.merchant_payout
-            )
-    except Exception as e:
-        print(f"Email error: {e}")
