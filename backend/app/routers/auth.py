@@ -6,7 +6,8 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import hashlib
+import secrets
 import os
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -15,7 +16,17 @@ SECRET_KEY = os.getenv("SECRET_KEY", "apnidukaan-secret-key-2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(32)
+    hashed = hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
+    return f"{salt}:{hashed}"
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        salt, hash_val = hashed.split(":")
+        return hashlib.sha256(f"{salt}{password}".encode()).hexdigest() == hash_val
+    except:
+        return False
 
 class MerchantRegister(BaseModel):
     name: str
@@ -54,7 +65,7 @@ def register(data: MerchantRegister, db: Session = Depends(get_db)):
     existing = db.query(Merchant).filter(Merchant.email == data.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    hashed = pwd_context.hash(data.password)
+    hashed = hash_password(data.password)
     merchant = Merchant(
         name=data.name,
         email=data.email,
@@ -83,7 +94,7 @@ def login(data: MerchantLogin, db: Session = Depends(get_db)):
     merchant = db.query(Merchant).filter(Merchant.email == data.email).first()
     if not merchant or not merchant.password_hash:
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    if not pwd_context.verify(data.password, merchant.password_hash):
+    if not verify_password(data.password, merchant.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_token(merchant.id)
     return TokenResponse(
