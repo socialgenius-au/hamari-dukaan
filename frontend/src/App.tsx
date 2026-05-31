@@ -221,8 +221,8 @@ export default function App() {
                   <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--red)' }}>${cartTotal.toFixed(2)}</span>
                 </div>
                 {demoMode ? (
-                  <button className="btn-primary" onClick={() => showToast('💳 Demo mode — no real payment taken!')}>
-                    Demo Checkout (No charge)
+                  <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>
+                    Proceed to Checkout
                   </button>
                 ) : (
                   <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
@@ -231,7 +231,7 @@ export default function App() {
             </>
           )}
         </div>
-        {checkoutOpen && !demoMode && (
+        {checkoutOpen && selectedMerchant && (
           <>
             <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
             <div className="bottom-sheet show">
@@ -482,8 +482,8 @@ export default function App() {
                 <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--red)' }}>${cartTotal.toFixed(2)}</span>
               </div>
               {demoMode ? (
-                <button className="btn-primary" onClick={() => showToast('🎯 Demo mode — no real payment taken!')}>
-                  Demo Checkout (No charge)
+                <button className="btn-primary" onClick={() => { if ((selectedMerchant as any)?.id === 8 || !demoMode) { setCheckoutOpen(true) } else { showToast("📞 Contact merchant directly to order") } }}>
+                  Proceed to Checkout
                 </button>
               ) : (
                 <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
@@ -493,7 +493,7 @@ export default function App() {
         )}
       </div>
 
-      {checkoutOpen && !demoMode && selectedMerchant !== null && (
+      {checkoutOpen && selectedMerchant !== null && (
         <>
           <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
           <div className="bottom-sheet show">
