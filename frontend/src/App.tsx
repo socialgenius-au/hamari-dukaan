@@ -53,7 +53,12 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [timers, setTimers] = useState<{ [key: number]: number }>({})
   const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const [demoMode, setDemoMode] = useState(() => localStorage.getItem(DEMO_MODE_KEY) === 'true')
+  const urlParams = new URLSearchParams(window.location.search)
+  const urlPromo = urlParams.get("promo") || ""
+  const urlRef = urlParams.get("ref") || ""
+  const [promoCode] = useState(urlPromo)
+  const [refCode] = useState(urlRef)
+  const [demoMode, setDemoMode] = useState(() => localStorage.getItem(DEMO_MODE_KEY) === "true")
 
   const toggleDemo = (on: boolean) => {
     setDemoMode(on)
@@ -235,7 +240,7 @@ export default function App() {
           <>
             <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
             <div className="bottom-sheet show">
-              <Checkout cart={cart} merchantId={selectedMerchant!.id} onClose={() => setCheckoutOpen(false)} />
+              <Checkout cart={cart} merchantId={selectedMerchant!.id} onClose={() => setCheckoutOpen(false)} promoCode={promoCode} refCode={refCode} />
             </div>
           </>
         )}
@@ -278,6 +283,15 @@ export default function App() {
               <div className="hero-sub">Auburn · Pendle Hill · Lakemba · Merrylands</div>
             </div>
 
+            {urlPromo && (
+              <div style={{ background: "linear-gradient(135deg, #276040, #1a4a30)", margin: "0 0 0", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 28 }}>🎉</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>Limited Offer — 5% off your first order!</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>Code {urlPromo} applied automatically at checkout</div>
+                </div>
+              </div>
+            )}
             {!demoMode && (
               <div style={{ margin: '12px 16px 0', background: 'var(--green-dark)', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
@@ -505,7 +519,7 @@ export default function App() {
         <>
           <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
           <div className="bottom-sheet show">
-            <Checkout cart={cart} merchantId={(selectedMerchant as any).id} onClose={() => setCheckoutOpen(false)} />
+            <Checkout cart={cart} merchantId={(selectedMerchant as any).id} onClose={() => setCheckoutOpen(false)} promoCode={promoCode} refCode={refCode} />
           </div>
         </>
       )}

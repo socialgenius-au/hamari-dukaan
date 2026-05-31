@@ -29,3 +29,6 @@ export const getArticles = () =>
   api.get('/articles/').then(r => r.data)
 
 export default api
+
+export const validatePromo = (code: string) =>
+  api.get('/promo/validate', { params: { code } }).then(r => r.data)
