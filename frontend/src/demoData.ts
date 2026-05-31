@@ -1,4 +1,4 @@
-export const DEMO_MODE_KEY = 'apni_demo_mode'
+export const DEMO_MODE_KEY = "apni_demo_mode_v2"
 export const DEMO_MERCHANT_ID = 8
 
 export const demoMerchants = [
@@ -63,3 +63,4 @@ export const demoOffers = [
   { id: 302, merchant: 'Spice Route', name: 'Basmati Rice 10kg', emoji: '🍚', was: 34.99, now: 26.99, save: '23% OFF', badge: 'LIMITED', expires: 'Ends Sunday' },
   { id: 303, merchant: 'Lahori Sweets', name: 'Mixed Mithai Box 1kg', emoji: '🍮', was: 28.99, now: 21.99, save: '24% OFF', badge: 'POPULAR', expires: 'Ends Friday' },
 ]
+// v2.1 Sun 31 May 2026 16:37:22 AEST
