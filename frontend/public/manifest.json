@@ -1,0 +1,26 @@
+{
+  "name": "Apni Dukaan — اپنی دکان",
+  "short_name": "Apni Dukaan",
+  "description": "Halal · Fresh · Local — Community marketplace for South Asian and halal groceries in Sydney",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F0E8",
+  "theme_color": "#276040",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "food", "lifestyle"],
+  "lang": "en-AU"
+}

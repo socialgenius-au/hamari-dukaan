@@ -252,6 +252,14 @@ export default function App() {
           🎯 DEMO MODE — Sample data only · <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => toggleDemo(false)}>Exit Demo</span>
         </div>
       )}
+      <div className="desktop-nav">
+        <button className={`desktop-nav-item ${tab==='discover'?'active':''}`} onClick={() => setTab('discover')}>Discover</button>
+        <button className={`desktop-nav-item ${tab==='happyhour'?'active':''}`} onClick={() => setTab('happyhour')}>Happy Hour</button>
+        <button className={`desktop-nav-item ${tab==='offers'?'active':''}`} onClick={() => setTab('offers')}>Best Offers</button>
+        <button className={`desktop-nav-item ${tab==='reels'?'active':''}`} onClick={() => setTab('reels')}>Chef Reels</button>
+        <button className={`desktop-nav-item ${tab==='blog'?'active':''}`} onClick={() => setTab('blog')}>Recipes</button>
+        <button className="desktop-nav-item" onClick={() => window.location.href='/merchant'}>Merchant Portal</button>
+      </div>
       <div className="top-bar">
         <div className="top-bar-logo">Apni Dukaan <span>اپنی دکان</span></div>
         <input className="search-bar" placeholder="Search products, merchants..." value={search} onChange={e => setSearch(e.target.value)} />

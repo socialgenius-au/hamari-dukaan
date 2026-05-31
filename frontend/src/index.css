@@ -582,3 +582,205 @@ a { text-decoration: none; color: inherit; }
   font-size: 12px;
   color: rgba(255,255,255,0.7);
 }
+
+/* ── TABLET (768px+) ─────────────────────────────────── */
+@media (min-width: 768px) {
+  html, body, #root {
+    max-width: 100%;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 80px;
+    padding-bottom: 40px;
+  }
+
+  .top-bar {
+    max-width: 100%;
+    padding: 14px 40px;
+  }
+
+  .top-bar-logo {
+    font-size: 22px;
+  }
+
+  .nav-search {
+    max-width: 480px;
+  }
+
+  .bottom-nav {
+    display: none;
+  }
+
+  /* Desktop top navigation instead of bottom nav */
+  .desktop-nav {
+    display: flex !important;
+  }
+
+  .merchant-grid {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0 40px 24px;
+    gap: 20px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 40px 24px;
+    gap: 16px;
+  }
+
+  .blog-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 40px 24px;
+    gap: 16px;
+  }
+
+  .cat-tabs {
+    padding: 16px 40px;
+    gap: 12px;
+  }
+
+  .cat-tab {
+    padding: 8px 20px;
+    font-size: 13px;
+  }
+
+  .section-header {
+    padding: 20px 40px 10px;
+  }
+
+  .hh-card {
+    margin: 0 40px 16px;
+  }
+
+  .offer-card {
+    margin: 0 40px 16px;
+  }
+
+  .hero {
+    padding: 40px 40px;
+  }
+
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+  }
+
+  .bottom-sheet {
+    max-width: 520px;
+    border-radius: 20px;
+    bottom: 40px;
+  }
+
+  .merchant-emoji {
+    height: 120px;
+    font-size: 52px;
+  }
+
+  .product-img {
+    height: 120px;
+    font-size: 52px;
+  }
+}
+
+/* ── DESKTOP (1024px+) ───────────────────────────────── */
+@media (min-width: 1024px) {
+  .merchant-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .top-bar {
+    padding: 16px 80px;
+  }
+
+  .page {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .merchant-grid {
+    padding: 0 80px 24px;
+  }
+
+  .product-grid {
+    padding: 0 80px 24px;
+  }
+
+  .blog-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 80px 24px;
+  }
+
+  .cat-tabs {
+    padding: 16px 80px;
+  }
+
+  .section-header {
+    padding: 20px 80px 10px;
+  }
+
+  .hh-card {
+    margin: 0 80px 16px;
+    max-width: 600px;
+  }
+
+  .offer-card {
+    margin: 0 80px 16px;
+    max-width: 500px;
+  }
+
+  .hero {
+    padding: 60px 80px;
+  }
+
+  .hero-title {
+    font-size: 40px;
+  }
+}
+
+/* ── DESKTOP TOP NAV ─────────────────────────────────── */
+.desktop-nav {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--green);
+  z-index: 99;
+  justify-content: center;
+  gap: 0;
+  padding: 0 40px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+
+.desktop-nav-item {
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.desktop-nav-item:hover {
+  color: white;
+}
+
+.desktop-nav-item.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
