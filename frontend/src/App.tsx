@@ -504,7 +504,7 @@ export default function App() {
                 <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--red)' }}>${cartTotal.toFixed(2)}</span>
               </div>
               {demoMode ? (
-                <button className="btn-primary" onClick={() => { if ((selectedMerchant as any)?.id === 8 || !demoMode) { setCheckoutOpen(true) } else { showToast("📞 Contact merchant directly to order") } }}>
+                <button className="btn-primary" onClick={() => { if (!demoMode || (selectedMerchant as any)?.id === 8) { setCheckoutOpen(true) } else { showToast("🎯 Demo only — tap King Spice & Mini Mart to test real checkout!") } }}>
                   Proceed to Checkout
                 </button>
               ) : (
