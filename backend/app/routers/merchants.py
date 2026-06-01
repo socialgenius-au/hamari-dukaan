@@ -65,3 +65,23 @@ def get_merchant_products(merchant_id: int, db: Session = Depends(get_db)):
         Product.is_active == True
     ).all()
     return products
+
+class MerchantUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    suburb: Optional[str] = None
+    category: Optional[str] = None
+    phone: Optional[str] = None
+    abn: Optional[str] = None
+    gst_registered: Optional[bool] = None
+
+@router.patch("/{merchant_id}", response_model=MerchantOut)
+def update_merchant(merchant_id: int, update: MerchantUpdate, db: Session = Depends(get_db)):
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    for field, value in update.dict(exclude_none=True).items():
+        setattr(merchant, field, value)
+    db.commit()
+    db.refresh(merchant)
+    return merchant

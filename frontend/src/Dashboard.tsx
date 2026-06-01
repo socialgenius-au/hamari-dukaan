@@ -251,6 +251,10 @@ export default function Dashboard() {
                 style={{ width: "100%", padding: "12px", background: "#fce4ec", border: "1px solid #ef9a9a", borderRadius: 10, fontWeight: 700, fontSize: 13, color: "#c62828", cursor: "pointer", marginBottom: 10, textAlign: "left" }}>
                 🔄 Reset Demo Orders
               </button>
+              <button onClick={() => window.location.href = "/settings"}
+                style={{ width: "100%", padding: "12px", background: "var(--cream-dark)", border: "1px solid var(--border)", borderRadius: 10, fontWeight: 700, fontSize: 13, color: "var(--green-dark)", cursor: "pointer", marginBottom: 10, textAlign: "left" }}>
+                ⚙️ Store Settings & ABN
+              </button>
               <button onClick={() => window.location.href = "/import"}
                 style={{ width: '100%', padding: '12px', background: 'var(--cream-dark)', border: '1px solid var(--border)', borderRadius: 10, fontWeight: 700, fontSize: 13, color: 'var(--green-dark)', cursor: 'pointer', marginBottom: 10, textAlign: 'left' }}>
                 📦 Import Products (CSV / Barcode)
