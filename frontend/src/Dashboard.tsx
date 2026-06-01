@@ -58,6 +58,15 @@ export default function Dashboard() {
     setUpdatingId(null)
   }
 
+  const resetOrders = async () => {
+    if (!window.confirm("Reset all demo orders? This cannot be undone.")) return
+    try {
+      await axios.delete(`${API_URL}/orders/merchant/${merchantId}/reset`)
+      setOrders([])
+      alert("Orders reset! Ready for next demo.")
+    } catch { alert("Reset failed") }
+  }
+
   const logout = () => {
     localStorage.removeItem('merchant_token')
     localStorage.removeItem('merchant_id')
@@ -238,7 +247,11 @@ export default function Dashboard() {
 
             <div style={{ background: 'white', borderRadius: 16, padding: '16px', marginBottom: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 12, textTransform: 'uppercase' }}>Quick Actions</div>
-              <button onClick={() => window.location.href = '/import'}
+              <button onClick={resetOrders}
+                style={{ width: "100%", padding: "12px", background: "#fce4ec", border: "1px solid #ef9a9a", borderRadius: 10, fontWeight: 700, fontSize: 13, color: "#c62828", cursor: "pointer", marginBottom: 10, textAlign: "left" }}>
+                🔄 Reset Demo Orders
+              </button>
+              <button onClick={() => window.location.href = "/import"}
                 style={{ width: '100%', padding: '12px', background: 'var(--cream-dark)', border: '1px solid var(--border)', borderRadius: 10, fontWeight: 700, fontSize: 13, color: 'var(--green-dark)', cursor: 'pointer', marginBottom: 10, textAlign: 'left' }}>
                 📦 Import Products (CSV / Barcode)
               </button>

@@ -88,3 +88,9 @@ def get_order(order_id: int, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+@router.delete("/merchant/{merchant_id}/reset")
+def reset_merchant_orders(merchant_id: int, db: Session = Depends(get_db)):
+    db.query(Order).filter(Order.merchant_id == merchant_id).delete()
+    db.commit()
+    return {"message": "All orders cleared for demo reset"}
