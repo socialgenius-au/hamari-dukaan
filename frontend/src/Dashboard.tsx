@@ -21,6 +21,7 @@ type Order = {
 
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
+  const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'orders' | 'stats'>('orders')
   const [updatingId, setUpdatingId] = useState<number | null>(null)
@@ -35,6 +36,10 @@ export default function Dashboard() {
       return
     }
     fetchOrders()
+    // Fetch merchant profile with bank details
+    axios.get(`${API_URL}/auth/merchant-profile?token=${token}`)
+      .then(res => setProfile(res.data))
+      .catch(() => {})
     const interval = setInterval(fetchOrders, 30000)
     return () => clearInterval(interval)
   }, [])
@@ -265,6 +270,35 @@ export default function Dashboard() {
               </button>
             </div>
 
+            {profile && (
+              <div style={{ background: 'white', borderRadius: 16, padding: '16px', marginBottom: 12, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 12, textTransform: 'uppercase' }}>Payout Details</div>
+                {profile.bank_account ? (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, color: 'var(--text-2)' }}>Account name</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{profile.bank_account_name || '-'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, color: 'var(--text-2)' }}>BSB</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{profile.bank_bsb || '-'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, color: 'var(--text-2)' }}>Account number</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{profile.bank_account}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, color: 'var(--text-2)' }}>Payout method</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)' }}>
+                        {profile.payment_preference === 'direct' ? '🏦 Direct Stripe' : '📋 Weekly bank transfer'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Bank details not set yet. Contact Apni Dukaan to add your bank account.</div>
+                )}
+              </div>
+            )}
             <div style={{ background: 'var(--green-dark)', borderRadius: 16, padding: '16px' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginBottom: 8 }}>Commission Tier</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>

@@ -122,3 +122,26 @@ def get_me(token: str, db: Session = Depends(get_db)):
         "stripe_connected": merchant.stripe_connected,
         "is_active": merchant.is_active
     }
+
+@router.get("/merchant-profile")
+def get_merchant_profile(token: str, db: Session = Depends(get_db)):
+    merchant_id = verify_token(token)
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    return {
+        "id": merchant.id,
+        "name": merchant.name,
+        "email": merchant.email,
+        "suburb": merchant.suburb,
+        "category": merchant.category,
+        "emoji": merchant.emoji,
+        "phone": merchant.phone,
+        "abn": merchant.abn,
+        "gst_registered": merchant.gst_registered,
+        "stripe_connected": merchant.stripe_connected,
+        "payment_preference": getattr(merchant, 'payment_preference', 'platform'),
+        "bank_bsb": getattr(merchant, 'bank_bsb', None),
+        "bank_account": getattr(merchant, 'bank_account', None),
+        "bank_account_name": getattr(merchant, 'bank_account_name', None),
+    }
