@@ -6,6 +6,7 @@ import Import from './Import.tsx'
 import MerchantAuth from './MerchantAuth.tsx'
 import Dashboard from './Dashboard.tsx'
 import MerchantSettings from "./MerchantSettings.tsx"
+import Admin from "./Admin.tsx"
 import './index.css'
 
 const path = window.location.pathname
@@ -16,7 +17,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
      path === '/import' ? <Import /> :
      path === '/merchant' ? <MerchantAuth /> :
      path === "/dashboard" ? <Dashboard /> :
-     path === "/settings" ? <MerchantSettings />  :
+     path === "/settings" ? <MerchantSettings /> :
+     path === "/admin" ? <Admin />  :
      <App />}
   </React.StrictMode>,
 )
