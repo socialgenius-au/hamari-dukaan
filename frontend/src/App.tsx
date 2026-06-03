@@ -287,7 +287,7 @@ export default function App() {
               <div style={{ background: "linear-gradient(135deg, #276040, #1a4a30)", margin: "0 0 0", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 28 }}>🎉</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>Limited Offer — 5% off your first order!</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>Limited Offer — 10% off your first order!</div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>Code {urlPromo} applied automatically at checkout</div>
                 </div>
               </div>
