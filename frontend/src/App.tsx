@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import './index.css'
 import { getMerchants, getMerchantProducts, getHappyHours } from './api'
 import Checkout from './Checkout'
-import { DEMO_MODE_KEY, demoMerchants, demoProducts, demoHappyHours, demoOffers } from './demoData'
 
 const blogs = [
   { id: 1, cat: 'Recipe', title: 'How to make authentic biryani at home', emoji: '🍚', bg: '#e8f5e9' },
@@ -10,13 +9,11 @@ const blogs = [
   { id: 3, cat: 'Tips', title: 'Pakistani spices guide — what to buy first', emoji: '🌶️', bg: '#fce4ec' },
   { id: 4, cat: 'Seasonal', title: 'Ramadan grocery checklist Sydney 2026', emoji: '🌙', bg: '#e3f2fd' },
 ]
-
 const reels = [
   { id: 1, title: 'Perfect Karahi in 30 mins', chef: 'Chef Rashid', views: '12K', emoji: '👨‍🍳' },
   { id: 2, title: 'Authentic Daal Makhani', chef: 'Fatima Cooks', views: '8.4K', emoji: '👩‍🍳' },
   { id: 3, title: 'Ramadan Special Kheer', chef: "Ammi's Kitchen", views: '21K', emoji: '🍚' },
 ]
-
 const categories = ['All', 'Halal Butcher', 'Spice Shop', 'Grocery', 'Bakery']
 
 function formatTime(s: number) {
@@ -58,45 +55,16 @@ export default function App() {
   const urlRef = urlParams.get("ref") || ""
   const [promoCode] = useState(urlPromo)
   const [refCode] = useState(urlRef)
-  const [demoMode, setDemoMode] = useState(() => localStorage.getItem(DEMO_MODE_KEY) === "true")
-
-  const toggleDemo = (on: boolean) => {
-    setDemoMode(on)
-    localStorage.setItem(DEMO_MODE_KEY, on ? 'true' : 'false')
-    setSelectedMerchant(null)
-    setCart([])
-    setTab('discover')
-    setCat('All')
-    setSearch('')
-  }
 
   useEffect(() => {
-    if (demoMode) {
-      let filtered = demoMerchants as Merchant[]
-      if (cat !== 'All') filtered = filtered.filter(m => m.category === cat)
-      if (search) filtered = filtered.filter(m => m.name.toLowerCase().includes(search.toLowerCase()) || m.suburb.toLowerCase().includes(search.toLowerCase()))
-      setMerchants(filtered)
-      setLoading(false)
-      return
-    }
     setLoading(true)
     getMerchants(cat !== 'All' ? cat : undefined, search || undefined)
       .then(data => { setMerchants(data); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [cat, search, demoMode])
+  }, [cat, search])
 
   useEffect(() => {
     if (tab === 'happyhour') {
-      if (demoMode) {
-        setHappyHours(demoHappyHours as HappyHour[])
-        const t: { [key: number]: number } = {}
-        demoHappyHours.forEach(h => {
-          const end = new Date(h.end_time).getTime()
-          t[h.id] = Math.max(0, Math.floor((end - Date.now()) / 1000))
-        })
-        setTimers(t)
-        return
-      }
       getHappyHours().then(data => {
         setHappyHours(data)
         const t: { [key: number]: number } = {}
@@ -106,17 +74,13 @@ export default function App() {
         setTimers(t)
       })
     }
-  }, [tab, demoMode])
+  }, [tab])
 
   useEffect(() => {
     if (selectedMerchant) {
-      if (demoMode) {
-        setMerchantProducts((demoProducts[selectedMerchant.id] || []) as Product[])
-        return
-      }
       getMerchantProducts(selectedMerchant.id).then(setMerchantProducts)
     }
-  }, [selectedMerchant, demoMode])
+  }, [selectedMerchant])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -151,17 +115,10 @@ export default function App() {
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0)
   const cartCount = cart.reduce((sum, i) => sum + i.qty, 0)
 
-  const activeOffers = demoMode ? demoOffers : []
-
   // ── MERCHANT PRODUCTS VIEW ──────────────────────────────
   if (selectedMerchant) {
     return (
       <div>
-        {demoMode && (
-          <div style={{ background: 'var(--gold)', padding: '6px 16px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--green-dark)' }}>
-            🎯 DEMO MODE — Sample data only · <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => toggleDemo(false)}>Exit Demo</span>
-          </div>
-        )}
         <div className="top-bar" style={{ gap: 12 }}>
           <button onClick={() => { setSelectedMerchant(null); setMerchantProducts([]) }} style={{ background: 'none', color: 'white', fontSize: 22, padding: '0 4px', border: 'none', cursor: 'pointer' }}>←</button>
           <div className="top-bar-logo" style={{ fontSize: 15 }}>{selectedMerchant.name}</div>
@@ -225,13 +182,7 @@ export default function App() {
                   <span style={{ fontWeight: 700, fontSize: 15 }}>Total</span>
                   <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--red)' }}>${cartTotal.toFixed(2)}</span>
                 </div>
-                {demoMode ? (
-                  <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>
-                    Proceed to Checkout
-                  </button>
-                ) : (
-                  <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
-                )}
+                <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
               </div>
             </>
           )}
@@ -240,7 +191,7 @@ export default function App() {
           <>
             <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
             <div className="bottom-sheet show">
-              <Checkout cart={cart} merchantId={selectedMerchant!.id} onClose={() => setCheckoutOpen(false)} promoCode={promoCode} refCode={refCode} />
+              <Checkout cart={cart} merchantId={selectedMerchant.id} onClose={() => setCheckoutOpen(false)} promoCode={promoCode} refCode={refCode} />
             </div>
           </>
         )}
@@ -252,11 +203,6 @@ export default function App() {
   // ── MAIN APP ────────────────────────────────────────────
   return (
     <div>
-      {demoMode && (
-        <div style={{ background: 'var(--gold)', padding: '6px 16px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--green-dark)' }}>
-          🎯 DEMO MODE — Sample data only · <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => toggleDemo(false)}>Exit Demo</span>
-        </div>
-      )}
       <div className="desktop-nav">
         <button className={`desktop-nav-item ${tab==='discover'?'active':''}`} onClick={() => setTab('discover')}>Discover</button>
         <button className={`desktop-nav-item ${tab==='happyhour'?'active':''}`} onClick={() => setTab('happyhour')}>Happy Hour</button>
@@ -273,7 +219,6 @@ export default function App() {
           {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
         </button>
       </div>
-
       <div className="page">
         {tab === 'discover' && (
           <div>
@@ -282,7 +227,6 @@ export default function App() {
               <div className="hero-title">Halal · Fresh · Local</div>
               <div className="hero-sub">Auburn · Pendle Hill · Lakemba · Merrylands</div>
             </div>
-
             {urlPromo && (
               <div style={{ background: "linear-gradient(135deg, #276040, #1a4a30)", margin: "0 0 0", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 28 }}>🎉</span>
@@ -292,19 +236,6 @@ export default function App() {
                 </div>
               </div>
             )}
-            {!demoMode && (
-              <div style={{ margin: '12px 16px 0', background: 'var(--green-dark)', borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginBottom: 2 }}>🎯 See a full demo</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>Preview with sample merchants & products</div>
-                </div>
-                <button onClick={() => toggleDemo(true)}
-                  style={{ background: 'var(--gold)', color: 'var(--green-dark)', border: 'none', borderRadius: 10, padding: '8px 14px', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  View Demo
-                </button>
-              </div>
-            )}
-
             <div className="cat-tabs">
               {categories.map(c => (
                 <button key={c} className={`cat-tab ${cat === c ? 'active' : ''}`} onClick={() => setCat(c)}>{c}</button>
@@ -344,7 +275,6 @@ export default function App() {
             )}
           </div>
         )}
-
         {tab === 'happyhour' && (
           <div>
             <div className="hero">
@@ -359,7 +289,7 @@ export default function App() {
                 <div style={{ fontSize: 13 }}>Check back soon</div>
               </div>
             ) : happyHours.map(h => {
-              const merchant = [...demoMerchants, ...merchants].find(m => m.id === h.merchant_id)
+              const merchant = merchants.find(m => m.id === h.merchant_id)
               return (
                 <div key={h.id} className="hh-card">
                   <div className="hh-header">
@@ -372,7 +302,7 @@ export default function App() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--red)' }}>{h.discount_percent}% OFF</div>
                       <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{h.orders_taken}/{h.max_orders} taken</div>
-                      <button className="btn-gold" style={{ padding: '8px 16px', fontSize: 12 }} onClick={() => showToast(demoMode ? '🎯 Demo — no real order placed!' : 'Added to cart!')}>Grab Deal</button>
+                      <button className="btn-gold" style={{ padding: '8px 16px', fontSize: 12 }} onClick={() => showToast('Added to cart!')}>Grab Deal</button>
                     </div>
                   </div>
                 </div>
@@ -380,7 +310,6 @@ export default function App() {
             })}
           </div>
         )}
-
         {tab === 'offers' && (
           <div>
             <div className="hero">
@@ -388,32 +317,13 @@ export default function App() {
               <div className="hero-title">Flash Offers</div>
               <div className="hero-sub">Handpicked deals from top merchants</div>
             </div>
-            {activeOffers.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-3)' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🏷️</div>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Offers coming soon</div>
-                <div style={{ fontSize: 13 }}>Merchants will post flash offers here</div>
-              </div>
-            ) : activeOffers.map(o => (
-              <div key={o.id} className="offer-card">
-                <span className="offer-badge">{o.badge}</span>
-                <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, background: 'var(--cream-dark)' }}>{o.emoji}</div>
-                <div style={{ padding: '12px 14px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', marginBottom: 2 }}>{o.merchant}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 8 }}>{o.name}</div>
-                  <div className="price-row" style={{ marginBottom: 8 }}>
-                    <span className="price-orig">${o.was.toFixed(2)}</span>
-                    <span className="price-now">${o.now.toFixed(2)}</span>
-                    <span className="price-save">{o.save}</span>
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10 }}>⏰ {o.expires}</div>
-                  <button className="btn-primary" onClick={() => showToast(demoMode ? '🎯 Demo — no real order!' : 'Added to cart!')}>Add to Cart</button>
-                </div>
-              </div>
-            ))}
+            <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-3)' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🏷️</div>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>Offers coming soon</div>
+              <div style={{ fontSize: 13 }}>Merchants will post flash offers here</div>
+            </div>
           </div>
         )}
-
         {tab === 'reels' && (
           <div>
             <div className="hero">
@@ -440,7 +350,6 @@ export default function App() {
             </div>
           </div>
         )}
-
         {tab === 'blog' && (
           <div>
             <div className="hero">
@@ -463,7 +372,6 @@ export default function App() {
           </div>
         )}
       </div>
-
       <nav className="bottom-nav">
         <button className={`nav-item ${tab === 'discover' ? 'active' : ''}`} onClick={() => setTab('discover')}><IconHome /><span>Discover</span></button>
         <button className={`nav-item ${tab === 'happyhour' ? 'active' : ''}`} onClick={() => setTab('happyhour')}><IconClock /><span>Happy Hour</span></button>
@@ -471,7 +379,6 @@ export default function App() {
         <button className={`nav-item ${tab === 'reels' ? 'active' : ''}`} onClick={() => setTab('reels')}><IconPlay /><span>Reels</span></button>
         <button className={`nav-item ${tab === 'blog' ? 'active' : ''}`} onClick={() => setTab('blog')}><IconBook /><span>Recipes</span></button>
       </nav>
-
       <div className={`overlay ${cartOpen ? 'show' : ''}`} onClick={() => setCartOpen(false)} />
       <div className={`bottom-sheet ${cartOpen ? 'show' : ''}`}>
         <div className="sheet-handle" />
@@ -503,18 +410,11 @@ export default function App() {
                 <span style={{ fontWeight: 700, fontSize: 15 }}>Total</span>
                 <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--red)' }}>${cartTotal.toFixed(2)}</span>
               </div>
-              {demoMode ? (
-                <button className="btn-primary" onClick={() => { if (!demoMode || (selectedMerchant as any)?.id === 8) { setCheckoutOpen(true) } else { showToast("🎯 Demo only — tap King Spice & Mini Mart to test real checkout!") } }}>
-                  Proceed to Checkout
-                </button>
-              ) : (
-                <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
-              )}
+              <button className="btn-primary" onClick={() => setCheckoutOpen(true)}>Proceed to Checkout</button>
             </div>
           </>
         )}
       </div>
-
       {checkoutOpen && selectedMerchant !== null && (
         <>
           <div className="overlay show" onClick={() => setCheckoutOpen(false)} />
@@ -523,7 +423,6 @@ export default function App() {
           </div>
         </>
       )}
-
       <div className={`toast ${toastShow ? 'show' : ''}`}>{toast}</div>
     </div>
   )
