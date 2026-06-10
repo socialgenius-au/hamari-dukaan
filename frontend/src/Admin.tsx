@@ -3,17 +3,32 @@ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
+const EMOJIS = ['📦','🍚','🫘','🌶️','🧅','🧄','🫚','🍅','🥩','🐟','🍗','🥛','🧀','🥚','🍞','🫓','🧈','🍯','🫖','☕','🧃','🥤','🍵','🌿','🫙','🥫','🍋','🍊','🍌','🍎','🥦','🥕','🌽','🫑','🍆','🥔','🧆','🍢','🍡','🍮','🍰','🎂','🍩','🍪','🍫','🍬','🍭']
+
 export default function Admin() {
   const [password, setPassword] = useState('')
   const [loggedIn, setLoggedIn] = useState(false)
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'overview' | 'merchants' | 'orders'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'merchants' | 'orders' | 'products'>('overview')
   const [selectedMerchant, setSelectedMerchant] = useState<any>(null)
   const [editData, setEditData] = useState<any>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  // Products state
+  const [products, setProducts] = useState<any[]>([])
+  const [productMerchant, setProductMerchant] = useState<any>(null)
+  const [loadingProducts, setLoadingProducts] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<any>(null)
+  const [showAddProduct, setShowAddProduct] = useState(false)
+  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', category: '', emoji: '📦', stock_qty: '0' })
+  const [productSaving, setProductSaving] = useState(false)
+  const [productMsg, setProductMsg] = useState('')
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<any>(null)
 
   const headers = { 'x-admin-password': password }
 
@@ -45,6 +60,106 @@ export default function Admin() {
     setSaving(false)
   }
 
+  const fetchProducts = async (merchant: any) => {
+    setProductMerchant(merchant)
+    setLoadingProducts(true)
+    setProducts([])
+    setEditingProduct(null)
+    setShowAddProduct(false)
+    setImportResult(null)
+    try {
+      const res = await axios.get(`${API_URL}/products/merchant/${merchant.id}`)
+      setProducts(res.data)
+    } catch {
+      setProductMsg('Failed to load products')
+    }
+    setLoadingProducts(false)
+  }
+
+  const handleAddProduct = async () => {
+    if (!newProduct.name || !newProduct.price) return setProductMsg('Name and price are required')
+    setProductSaving(true)
+    try {
+      const res = await axios.post(`${API_URL}/products/`, {
+        merchant_id: productMerchant.id,
+        name: newProduct.name,
+        description: newProduct.description || null,
+        price: parseFloat(newProduct.price),
+        category: newProduct.category || null,
+        emoji: newProduct.emoji,
+        stock_qty: parseInt(newProduct.stock_qty) || 0,
+      })
+      setProducts(prev => [...prev, res.data])
+      setNewProduct({ name: '', description: '', price: '', category: '', emoji: '📦', stock_qty: '0' })
+      setShowAddProduct(false)
+      setProductMsg('✅ Product added!')
+      setTimeout(() => setProductMsg(''), 3000)
+    } catch {
+      setProductMsg('❌ Failed to add product')
+    }
+    setProductSaving(false)
+  }
+
+  const handleUpdateProduct = async () => {
+    setProductSaving(true)
+    try {
+      const res = await axios.patch(`${API_URL}/products/${editingProduct.id}`, {
+        name: editingProduct.name,
+        description: editingProduct.description,
+        price: parseFloat(editingProduct.price),
+        category: editingProduct.category,
+        emoji: editingProduct.emoji,
+        stock_qty: parseInt(editingProduct.stock_qty),
+        is_active: editingProduct.is_active,
+      })
+      setProducts(prev => prev.map(p => p.id === res.data.id ? res.data : p))
+      setEditingProduct(null)
+      setProductMsg('✅ Product updated!')
+      setTimeout(() => setProductMsg(''), 3000)
+    } catch {
+      setProductMsg('❌ Failed to update')
+    }
+    setProductSaving(false)
+  }
+
+  const handleDeleteProduct = async (productId: number, name: string) => {
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
+    try {
+      await axios.delete(`${API_URL}/products/${productId}`)
+      setProducts(prev => prev.filter(p => p.id !== productId))
+      setProductMsg('✅ Product deleted')
+      setTimeout(() => setProductMsg(''), 3000)
+    } catch {
+      setProductMsg('❌ Failed to delete')
+    }
+  }
+
+  const handleImportCSV = async () => {
+    if (!importFile) return
+    setImporting(true)
+    setImportResult(null)
+    const formData = new FormData()
+    formData.append('file', importFile)
+    try {
+      const res = await axios.post(`${API_URL}/products/import-csv?merchant_id=${productMerchant.id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      setImportResult(res.data)
+      await fetchProducts(productMerchant)
+    } catch {
+      setProductMsg('❌ Import failed')
+    }
+    setImporting(false)
+    setImportFile(null)
+  }
+
+  const downloadTemplate = () => {
+    window.open(`${API_URL}/products/template/csv`, '_blank')
+  }
+
+  const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 14, boxSizing: 'border-box' as const }
+  const labelStyle = { fontSize: 11, fontWeight: 700, color: 'var(--text-2)', display: 'block', marginBottom: 4 }
+
   if (!loggedIn) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -58,7 +173,7 @@ export default function Admin() {
             <input type="password" placeholder="Enter admin password" value={password}
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
-              style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 16, marginBottom: 12 }} />
+              style={{ ...inputStyle, marginBottom: 12 }} />
             {error && <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{error}</div>}
             <button className="btn-primary" onClick={handleLogin} disabled={loading}>
               {loading ? '⏳ Logging in...' : 'Login →'}
@@ -102,7 +217,7 @@ export default function Admin() {
 
       {/* Tabs */}
       <div style={{ background: 'white', borderBottom: '1px solid var(--border)', display: 'flex', padding: '0 24px' }}>
-        {[['overview', '📊 Overview'], ['merchants', '🏪 Merchants'], ['orders', '📦 Orders']].map(([tab, label]) => (
+        {[['overview', '📊 Overview'], ['merchants', '🏪 Merchants'], ['products', '📦 Products'], ['orders', '🛒 Orders']].map(([tab, label]) => (
           <button key={tab} onClick={() => setActiveTab(tab as any)}
             style={{ padding: '14px 20px', border: 'none', background: 'transparent', fontWeight: 700, fontSize: 13, cursor: 'pointer',
               color: activeTab === tab ? 'var(--green)' : 'var(--text-3)',
@@ -133,7 +248,7 @@ export default function Admin() {
                     return (
                       <tr key={o.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                         <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700 }}>#{o.id}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 13 }}>{o.buyer_name}<br/><span style={{ fontSize: 11, color: 'var(--text-3)' }}>{o.buyer_email}</span></td>
+                        <td style={{ padding: '10px 12px', fontSize: 13 }}>{o.buyer_name}<br /><span style={{ fontSize: 11, color: 'var(--text-3)' }}>{o.buyer_email}</span></td>
                         <td style={{ padding: '10px 12px', fontSize: 13 }}>{merchant?.name || `#${o.merchant_id}`}</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700 }}>${o.total?.toFixed(2)}</td>
                         <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--green)' }}>${o.commission?.toFixed(2)}</td>
@@ -147,9 +262,7 @@ export default function Admin() {
                             {o.status}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 12px', fontSize: 11, color: 'var(--text-3)' }}>
-                          {new Date(o.created_at).toLocaleDateString('en-AU')}
-                        </td>
+                        <td style={{ padding: '10px 12px', fontSize: 11, color: 'var(--text-3)' }}>{new Date(o.created_at).toLocaleDateString('en-AU')}</td>
                       </tr>
                     )
                   })}
@@ -172,112 +285,288 @@ export default function Admin() {
                       <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green-dark)' }}>{m.name}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{m.suburb} · {m.category} · ID: {m.id}</div>
                     </div>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 700,
-                        background: m.is_active ? '#e8f5e9' : '#fce4ec', color: m.is_active ? '#2e7d32' : 'var(--red)' }}>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 700, background: m.is_active ? '#e8f5e9' : '#fce4ec', color: m.is_active ? '#2e7d32' : 'var(--red)' }}>
                         {m.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 700,
-                        background: m.payment_preference === 'direct' ? '#e3f2fd' : '#fff3e0',
-                        color: m.payment_preference === 'direct' ? '#1565c0' : '#e65100' }}>
-                        {m.payment_preference === 'direct' ? 'Direct' : 'Platform'}
                       </span>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                    <div style={{ background: 'var(--cream-dark)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>{m.total_orders}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-3)' }}>Orders</div>
-                    </div>
-                    <div style={{ background: 'var(--cream-dark)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>${m.total_revenue?.toFixed(0)}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-3)' }}>Revenue</div>
-                    </div>
-                    <div style={{ background: 'var(--cream-dark)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: '#2e7d32' }}>${m.total_payout?.toFixed(0)}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-3)' }}>Their payout</div>
-                    </div>
+                    {[['Orders', m.total_orders], ['Revenue', `$${m.total_revenue?.toFixed(0)}`], ['Payout', `$${m.total_payout?.toFixed(0)}`]].map(([label, value]) => (
+                      <div key={label} style={{ background: 'var(--cream-dark)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>{value}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-3)' }}>{label}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Merchant Edit Panel */}
             {selectedMerchant && (
               <div>
                 <h2 style={{ color: 'var(--green-dark)', marginBottom: 16 }}>Edit — {selectedMerchant.name}</h2>
                 <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid var(--border)', marginBottom: 16 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 16, textTransform: 'uppercase' }}>Payment Settings</div>
-
                   <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', display: 'block', marginBottom: 4 }}>Payment Preference</label>
-                    <select value={editData.payment_preference} onChange={e => setEditData({...editData, payment_preference: e.target.value})}
-                      style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 14, background: 'white' }}>
+                    <label style={labelStyle}>Payment Preference</label>
+                    <select value={editData.payment_preference} onChange={e => setEditData({ ...editData, payment_preference: e.target.value })} style={inputStyle}>
                       <option value="platform">📋 Platform Managed (weekly bank transfer)</option>
                       <option value="direct">🏦 Direct Stripe Payout</option>
                     </select>
                   </div>
-
                   <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', display: 'block', marginBottom: 4 }}>Account Name</label>
-                    <input value={editData.bank_account_name} onChange={e => setEditData({...editData, bank_account_name: e.target.value})}
-                      placeholder="e.g. King Spice Pty Ltd"
-                      style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 14 }} />
+                    <label style={labelStyle}>Account Name</label>
+                    <input value={editData.bank_account_name} onChange={e => setEditData({ ...editData, bank_account_name: e.target.value })} placeholder="e.g. King Spice Pty Ltd" style={inputStyle} />
                   </div>
-
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', display: 'block', marginBottom: 4 }}>BSB</label>
-                      <input value={editData.bank_bsb} onChange={e => setEditData({...editData, bank_bsb: e.target.value})}
-                        placeholder="062-000"
-                        style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 14 }} />
+                      <label style={labelStyle}>BSB</label>
+                      <input value={editData.bank_bsb} onChange={e => setEditData({ ...editData, bank_bsb: e.target.value })} placeholder="062-000" style={inputStyle} />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', display: 'block', marginBottom: 4 }}>Account Number</label>
-                      <input value={editData.bank_account} onChange={e => setEditData({...editData, bank_account: e.target.value})}
-                        placeholder="12345678"
-                        style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 16 }} />
+                      <label style={labelStyle}>Account Number</label>
+                      <input value={editData.bank_account} onChange={e => setEditData({ ...editData, bank_account: e.target.value })} placeholder="12345678" style={inputStyle} />
                     </div>
                   </div>
-
                   <div style={{ marginBottom: 16 }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', display: 'block', marginBottom: 4 }}>Internal Notes</label>
-                    <textarea value={editData.notes} onChange={e => setEditData({...editData, notes: e.target.value})}
-                      placeholder="Notes about this merchant..." rows={2}
-                      style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 14, resize: 'none' }} />
+                    <label style={labelStyle}>Internal Notes</label>
+                    <textarea value={editData.notes} onChange={e => setEditData({ ...editData, notes: e.target.value })} placeholder="Notes about this merchant..." rows={2} style={{ ...inputStyle, resize: 'none' }} />
                   </div>
-
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--cream-dark)', borderRadius: 10, marginBottom: 16 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>Account Active</div>
-                    <button onClick={() => setEditData({...editData, is_active: !editData.is_active})}
-                      style={{ width: 48, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer',
-                        background: editData.is_active ? 'var(--green)' : '#ccc', position: 'relative' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'white',
-                        position: 'absolute', top: 3, left: editData.is_active ? 23 : 3 }} />
+                    <button onClick={() => setEditData({ ...editData, is_active: !editData.is_active })}
+                      style={{ width: 48, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer', background: editData.is_active ? 'var(--green)' : '#ccc', position: 'relative' }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: editData.is_active ? 23 : 3 }} />
                     </button>
                   </div>
-
                   {saved && <div style={{ background: '#e8f5e9', color: '#2e7d32', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12, fontWeight: 700 }}>✅ Saved!</div>}
-
-                  <button className="btn-primary" onClick={handleSaveMerchant} disabled={saving}>
-                    {saving ? '⏳ Saving...' : 'Save Changes'}
-                  </button>
+                  <button className="btn-primary" onClick={handleSaveMerchant} disabled={saving}>{saving ? '⏳ Saving...' : 'Save Changes'}</button>
                 </div>
-
                 <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 12, textTransform: 'uppercase' }}>Merchant Details</div>
-                  {[
-                    ['Email', selectedMerchant.email],
-                    ['Phone', selectedMerchant.phone],
-                    ['ABN', selectedMerchant.abn || 'Not provided'],
-                    ['GST', selectedMerchant.gst_registered ? 'Registered' : 'Not registered'],
-                  ].map(([label, value]) => (
+                  {[['Email', selectedMerchant.email], ['Phone', selectedMerchant.phone], ['ABN', selectedMerchant.abn || 'Not provided'], ['GST', selectedMerchant.gst_registered ? 'Registered' : 'Not registered']].map(([label, value]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
                       <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{label}</span>
                       <span style={{ fontSize: 13, fontWeight: 600 }}>{value || '-'}</span>
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PRODUCTS */}
+        {activeTab === 'products' && data && (
+          <div>
+            <h2 style={{ color: 'var(--green-dark)', marginBottom: 16 }}>Product Management</h2>
+
+            {/* Merchant selector */}
+            <div style={{ background: 'white', borderRadius: 16, padding: 16, border: '1px solid var(--border)', marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-2)', marginBottom: 10, textTransform: 'uppercase' }}>Select Merchant</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {data.merchants.map((m: any) => (
+                  <button key={m.id} onClick={() => fetchProducts(m)}
+                    style={{ padding: '8px 16px', borderRadius: 10, border: `2px solid ${productMerchant?.id === m.id ? 'var(--green)' : 'var(--border)'}`,
+                      background: productMerchant?.id === m.id ? 'var(--green)' : 'white',
+                      color: productMerchant?.id === m.id ? 'white' : 'var(--green-dark)',
+                      fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    {m.emoji} {m.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {productMerchant && (
+              <div>
+                {/* Toolbar */}
+                <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green-dark)', flex: 1 }}>
+                    {productMerchant.emoji} {productMerchant.name} — {products.length} products
+                  </div>
+                  <button onClick={() => { setShowAddProduct(true); setEditingProduct(null) }}
+                    style={{ background: 'var(--green)', color: 'white', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    + Add Product
+                  </button>
+                  <button onClick={downloadTemplate}
+                    style={{ background: 'var(--cream-dark)', color: 'var(--green-dark)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    📥 Download CSV Template
+                  </button>
+                </div>
+
+                {productMsg && (
+                  <div style={{ background: productMsg.includes('✅') ? '#e8f5e9' : '#fce4ec', color: productMsg.includes('✅') ? '#2e7d32' : 'var(--red)', padding: '10px 16px', borderRadius: 10, marginBottom: 16, fontWeight: 700, fontSize: 13 }}>
+                    {productMsg}
+                  </div>
+                )}
+
+                {/* Add Product Form */}
+                {showAddProduct && (
+                  <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '2px solid var(--green)', marginBottom: 20 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 16 }}>➕ Add New Product</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                      <div>
+                        <label style={labelStyle}>Product Name *</label>
+                        <input value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} placeholder="e.g. Basmati Rice 5kg" style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Price (AUD) *</label>
+                        <input type="number" step="0.01" value={newProduct.price} onChange={e => setNewProduct({ ...newProduct, price: e.target.value })} placeholder="18.99" style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Category</label>
+                        <input value={newProduct.category} onChange={e => setNewProduct({ ...newProduct, category: e.target.value })} placeholder="e.g. Rice & Grains" style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Stock Qty</label>
+                        <input type="number" value={newProduct.stock_qty} onChange={e => setNewProduct({ ...newProduct, stock_qty: e.target.value })} placeholder="0" style={inputStyle} />
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={labelStyle}>Description</label>
+                      <input value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} placeholder="Short description (optional)" style={inputStyle} />
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={labelStyle}>Emoji</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: 10, background: 'var(--cream-dark)', borderRadius: 10 }}>
+                        {EMOJIS.map(e => (
+                          <button key={e} onClick={() => setNewProduct({ ...newProduct, emoji: e })}
+                            style={{ fontSize: 22, background: newProduct.emoji === e ? 'var(--green)' : 'white', border: `2px solid ${newProduct.emoji === e ? 'var(--green)' : 'var(--border)'}`, borderRadius: 8, width: 40, height: 40, cursor: 'pointer' }}>
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button className="btn-primary" onClick={handleAddProduct} disabled={productSaving}>{productSaving ? '⏳ Saving...' : 'Add Product'}</button>
+                      <button onClick={() => setShowAddProduct(false)} style={{ background: 'var(--cream-dark)', color: 'var(--text-2)', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* CSV Import */}
+                <div style={{ background: 'white', borderRadius: 16, padding: 16, border: '1px solid var(--border)', marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 10 }}>📤 Import Products via CSV</div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input type="file" accept=".csv" onChange={e => setImportFile(e.target.files?.[0] || null)}
+                      style={{ fontSize: 13, flex: 1 }} />
+                    <button onClick={handleImportCSV} disabled={!importFile || importing}
+                      style={{ background: importFile ? 'var(--green)' : '#ccc', color: 'white', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: importFile ? 'pointer' : 'not-allowed' }}>
+                      {importing ? '⏳ Importing...' : 'Import CSV'}
+                    </button>
+                  </div>
+                  {importResult && (
+                    <div style={{ marginTop: 12, padding: 12, background: '#e8f5e9', borderRadius: 10, fontSize: 13 }}>
+                      ✅ Imported {importResult.imported_count} products
+                      {importResult.error_count > 0 && <span style={{ color: 'var(--red)', marginLeft: 8 }}>· {importResult.error_count} errors</span>}
+                    </div>
+                  )}
+                </div>
+
+                {/* Edit Product Form */}
+                {editingProduct && (
+                  <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '2px solid var(--gold)', marginBottom: 20 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 16 }}>✏️ Edit — {editingProduct.name}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                      <div>
+                        <label style={labelStyle}>Product Name</label>
+                        <input value={editingProduct.name} onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Price (AUD)</label>
+                        <input type="number" step="0.01" value={editingProduct.price} onChange={e => setEditingProduct({ ...editingProduct, price: e.target.value })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Category</label>
+                        <input value={editingProduct.category || ''} onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Stock Qty</label>
+                        <input type="number" value={editingProduct.stock_qty} onChange={e => setEditingProduct({ ...editingProduct, stock_qty: e.target.value })} style={inputStyle} />
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={labelStyle}>Description</label>
+                      <input value={editingProduct.description || ''} onChange={e => setEditingProduct({ ...editingProduct, description: e.target.value })} style={inputStyle} />
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={labelStyle}>Emoji</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: 10, background: 'var(--cream-dark)', borderRadius: 10 }}>
+                        {EMOJIS.map(e => (
+                          <button key={e} onClick={() => setEditingProduct({ ...editingProduct, emoji: e })}
+                            style={{ fontSize: 22, background: editingProduct.emoji === e ? 'var(--green)' : 'white', border: `2px solid ${editingProduct.emoji === e ? 'var(--green)' : 'var(--border)'}`, borderRadius: 8, width: 40, height: 40, cursor: 'pointer' }}>
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                      <label style={{ ...labelStyle, marginBottom: 0 }}>Active</label>
+                      <button onClick={() => setEditingProduct({ ...editingProduct, is_active: !editingProduct.is_active })}
+                        style={{ width: 48, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer', background: editingProduct.is_active ? 'var(--green)' : '#ccc', position: 'relative' }}>
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: editingProduct.is_active ? 23 : 3 }} />
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button className="btn-primary" onClick={handleUpdateProduct} disabled={productSaving}>{productSaving ? '⏳ Saving...' : 'Save Changes'}</button>
+                      <button onClick={() => setEditingProduct(null)} style={{ background: 'var(--cream-dark)', color: 'var(--text-2)', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Products Table */}
+                {loadingProducts ? (
+                  <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>⏳ Loading products...</div>
+                ) : products.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)', background: 'white', borderRadius: 16 }}>
+                    <div style={{ fontSize: 40, marginBottom: 12 }}>📦</div>
+                    <div style={{ fontWeight: 700 }}>No products yet</div>
+                    <div style={{ fontSize: 13, marginTop: 4 }}>Add products manually or import via CSV</div>
+                  </div>
+                ) : (
+                  <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--green)', color: 'white' }}>
+                          {['', 'Name', 'Category', 'Price', 'Stock', 'Status', 'Actions'].map(h => (
+                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: 12 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {products.map((p: any, i: number) => (
+                          <tr key={p.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                            <td style={{ padding: '10px 12px', fontSize: 24 }}>{p.emoji}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green-dark)' }}>{p.name}</div>
+                              {p.description && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{p.description.slice(0, 50)}{p.description.length > 50 ? '...' : ''}</div>}
+                            </td>
+                            <td style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-3)' }}>{p.category || '-'}</td>
+                            <td style={{ padding: '10px 12px', fontSize: 14, fontWeight: 700, color: 'var(--green)' }}>${p.price?.toFixed(2)}</td>
+                            <td style={{ padding: '10px 12px', fontSize: 13 }}>{p.stock_qty}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: p.is_active ? '#e8f5e9' : '#fce4ec', color: p.is_active ? '#2e7d32' : 'var(--red)' }}>
+                                {p.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={() => { setEditingProduct({ ...p }); setShowAddProduct(false) }}
+                                  style={{ background: 'var(--green)', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                                  Edit
+                                </button>
+                                <button onClick={() => handleDeleteProduct(p.id, p.name)}
+                                  style={{ background: '#fce4ec', color: 'var(--red)', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -316,9 +605,7 @@ export default function Admin() {
                             {o.status}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 12px', fontSize: 11, color: 'var(--text-3)' }}>
-                          {new Date(o.created_at).toLocaleDateString('en-AU')}
-                        </td>
+                        <td style={{ padding: '10px 12px', fontSize: 11, color: 'var(--text-3)' }}>{new Date(o.created_at).toLocaleDateString('en-AU')}</td>
                       </tr>
                     )
                   })}
