@@ -142,3 +142,36 @@ def download_template():
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=apnidukaan_product_template.csv"}
     )
+
+@router.get("/merchant/{merchant_id}", response_model=List[ProductOut])
+def get_merchant_products(merchant_id: int, db: Session = Depends(get_db)):
+    return db.query(Product).filter(Product.merchant_id == merchant_id).all()
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    category: Optional[str] = None
+    emoji: Optional[str] = None
+    stock_qty: Optional[int] = None
+    is_active: Optional[bool] = None
+
+@router.patch("/{product_id}", response_model=ProductOut)
+def update_product(product_id: int, updates: ProductUpdate, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    for field, value in updates.dict(exclude_none=True).items():
+        setattr(product, field, value)
+    db.commit()
+    db.refresh(product)
+    return product
+
+@router.delete("/{product_id}")
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    db.delete(product)
+    db.commit()
+    return {"deleted": product_id}
