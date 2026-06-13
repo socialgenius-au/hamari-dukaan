@@ -36,6 +36,9 @@ class Product(Base):
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     price = Column(Float, nullable=False)
+    cost_price = Column(Float, nullable=True)          # NEW — purchase/cost price
+    threshold = Column(Integer, nullable=True)         # NEW — low-stock alert level
+    tax_type = Column(String, nullable=True)           # NEW — "GST Free" / "Included GST" / "Excluded GST"
     category = Column(String, nullable=True)
     emoji = Column(String, default="📦")
     image_url = Column(String, nullable=True)
