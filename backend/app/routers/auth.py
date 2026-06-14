@@ -145,3 +145,12 @@ def get_merchant_profile(token: str, db: Session = Depends(get_db)):
         "bank_account": getattr(merchant, 'bank_account', None),
         "bank_account_name": getattr(merchant, 'bank_account_name', None),
     }
+
+@router.post("/reset-password-temp")
+def reset_password_temp(email: str, new_password: str, db: Session = Depends(get_db)):
+    merchant = db.query(Merchant).filter(Merchant.email == email).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Not found")
+    merchant.password_hash = hash_password(new_password)
+    db.commit()
+    return {"ok": True}
