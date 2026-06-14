@@ -7,7 +7,7 @@ from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
-from ..database import get_db   # adjust import to match your project
+from app.database import get_db
 
 router = APIRouter()
 
