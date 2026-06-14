@@ -6,6 +6,7 @@ from app.models.models import Merchant, Order
 from pydantic import BaseModel
 from typing import Optional
 import os
+import bcrypt
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -23,6 +24,18 @@ class MerchantAdminUpdate(BaseModel):
     bank_account_name: Optional[str] = None
     is_active: Optional[bool] = None
     notes: Optional[str] = None
+
+class MerchantCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    suburb: str
+    category: str
+    emoji: Optional[str] = "🏪"
+    phone: Optional[str] = None
+    email: str
+    password: Optional[str] = None
+    abn: Optional[str] = None
+    gst_registered: Optional[bool] = False
 
 @router.get("/dashboard")
 def admin_dashboard(db: Session = Depends(get_db), _=Depends(verify_admin)):
@@ -44,6 +57,7 @@ def admin_dashboard(db: Session = Depends(get_db), _=Depends(verify_admin)):
             "name": m.name,
             "suburb": m.suburb,
             "category": m.category,
+            "emoji": getattr(m, 'emoji', '🏪'),
             "email": m.email,
             "phone": m.phone,
             "abn": m.abn,
@@ -75,11 +89,49 @@ def admin_dashboard(db: Session = Depends(get_db), _=Depends(verify_admin)):
             "total": o.total,
             "commission": o.commission,
             "merchant_payout": o.merchant_payout,
+            "payment_method": o.payment_method,
             "status": o.status,
             "promo_code": o.promo_code,
             "ref_code": getattr(o, 'ref_code', None),
             "created_at": str(o.created_at)
         } for o in sorted(orders, key=lambda x: x.created_at or '', reverse=True)[:20]]
+    }
+
+@router.post("/merchants")
+def create_merchant_admin(merchant: MerchantCreate, db: Session = Depends(get_db), _=Depends(verify_admin)):
+    # Check email not already taken
+    existing = db.query(Merchant).filter(Merchant.email == merchant.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="A merchant with this email already exists")
+
+    # Hash password if provided
+    password_hash = None
+    if merchant.password:
+        password_hash = bcrypt.hashpw(merchant.password.encode(), bcrypt.gensalt()).decode()
+
+    new_merchant = Merchant(
+        name=merchant.name,
+        description=merchant.description,
+        suburb=merchant.suburb,
+        category=merchant.category,
+        emoji=merchant.emoji or "🏪",
+        phone=merchant.phone,
+        email=merchant.email,
+        password_hash=password_hash,
+        abn=merchant.abn,
+        gst_registered=merchant.gst_registered or False,
+        is_active=True,
+        stripe_connected=False,
+        payment_preference="platform",
+    )
+    db.add(new_merchant)
+    db.commit()
+    db.refresh(new_merchant)
+    return {
+        "message": "Merchant created successfully",
+        "merchant_id": new_merchant.id,
+        "name": new_merchant.name,
+        "email": new_merchant.email,
     }
 
 @router.patch("/merchants/{merchant_id}")
