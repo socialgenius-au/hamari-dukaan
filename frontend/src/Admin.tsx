@@ -4,6 +4,8 @@ import axios from 'axios'
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 const EMOJIS = ['📦','🍚','🫘','🌶️','🧅','🧄','🫚','🍅','🥩','🐟','🍗','🥛','🧀','🥚','🍞','🫓','🧈','🍯','🫖','☕','🧃','🥤','🍵','🌿','🫙','🥫','🍋','🍊','🍌','🍎','🥦','🥕','🌽','🫑','🍆','🥔','🧆','🍢','🍡','🍮','🍰','🎂','🍩','🍪','🍫','🍬','🍭']
+const STORE_EMOJIS = ['🏪','🛒','🏬','🥘','🍱','🛍️','🌏','🍛','🥗','🫕']
+const CATEGORIES = ['Grocery','Restaurant','Butcher','Bakery','Sweets','Pharmacy','General']
 
 export default function Admin() {
   const [password, setPassword] = useState('')
@@ -16,6 +18,15 @@ export default function Admin() {
   const [editData, setEditData] = useState<any>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  // Add Merchant state
+  const [showAddMerchant, setShowAddMerchant] = useState(false)
+  const [newMerchant, setNewMerchant] = useState({
+    name: '', description: '', suburb: '', category: 'Grocery', emoji: '🏪',
+    phone: '', email: '', password: '', abn: '', gst_registered: false
+  })
+  const [merchantSaving, setMerchantSaving] = useState(false)
+  const [merchantMsg, setMerchantMsg] = useState('')
 
   // Products state
   const [products, setProducts] = useState<any[]>([])
@@ -46,6 +57,37 @@ export default function Admin() {
   }
 
   const handleLogin = () => fetchData(password)
+
+  const handleAddMerchant = async () => {
+    if (!newMerchant.name || !newMerchant.suburb || !newMerchant.email) {
+      setMerchantMsg('❌ Name, suburb and email are required')
+      return
+    }
+    setMerchantSaving(true)
+    setMerchantMsg('')
+    try {
+      await axios.post(`${API_URL}/admin/merchants`, {
+        name: newMerchant.name,
+        description: newMerchant.description || null,
+        suburb: newMerchant.suburb,
+        category: newMerchant.category,
+        emoji: newMerchant.emoji,
+        phone: newMerchant.phone || null,
+        email: newMerchant.email,
+        password: newMerchant.password || null,
+        abn: newMerchant.abn || null,
+        gst_registered: newMerchant.gst_registered,
+      }, { headers })
+      setMerchantMsg('✅ Merchant created!')
+      setNewMerchant({ name: '', description: '', suburb: '', category: 'Grocery', emoji: '🏪', phone: '', email: '', password: '', abn: '', gst_registered: false })
+      setShowAddMerchant(false)
+      await fetchData(password)
+      setTimeout(() => setMerchantMsg(''), 4000)
+    } catch (e: any) {
+      setMerchantMsg(`❌ ${e?.response?.data?.detail || 'Failed to create merchant'}`)
+    }
+    setMerchantSaving(false)
+  }
 
   const handleSaveMerchant = async () => {
     setSaving(true)
@@ -274,85 +316,175 @@ export default function Admin() {
 
         {/* MERCHANTS */}
         {activeTab === 'merchants' && data && (
-          <div style={{ display: 'grid', gridTemplateColumns: selectedMerchant ? '1fr 1fr' : '1fr', gap: 24 }}>
-            <div>
-              <h2 style={{ color: 'var(--green-dark)', marginBottom: 16 }}>All Merchants</h2>
-              {data.merchants.map((m: any) => (
-                <div key={m.id} onClick={() => { setSelectedMerchant(m); setEditData({ payment_preference: m.payment_preference || 'platform', bank_bsb: m.bank_bsb || '', bank_account: m.bank_account || '', bank_account_name: m.bank_account_name || '', notes: m.notes || '', is_active: m.is_active }) }}
-                  style={{ background: 'white', borderRadius: 16, padding: 16, marginBottom: 12, border: `2px solid ${selectedMerchant?.id === m.id ? 'var(--green)' : 'var(--border)'}`, cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green-dark)' }}>{m.name}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{m.suburb} · {m.category} · ID: {m.id}</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
+          <div>
+            {/* Header row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ color: 'var(--green-dark)', margin: 0 }}>All Merchants ({data.merchants.length})</h2>
+              <button onClick={() => { setShowAddMerchant(true); setSelectedMerchant(null) }}
+                style={{ background: 'var(--green)', color: 'white', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                + Add New Merchant
+              </button>
+            </div>
+
+            {merchantMsg && (
+              <div style={{ background: merchantMsg.includes('✅') ? '#e8f5e9' : '#fce4ec', color: merchantMsg.includes('✅') ? '#2e7d32' : 'var(--red)', padding: '10px 16px', borderRadius: 10, marginBottom: 16, fontWeight: 700, fontSize: 13 }}>
+                {merchantMsg}
+              </div>
+            )}
+
+            {/* Add Merchant Form */}
+            {showAddMerchant && (
+              <div style={{ background: 'white', borderRadius: 16, padding: 24, border: '2px solid var(--green)', marginBottom: 24 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 20 }}>➕ Add New Merchant</div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                  <div>
+                    <label style={labelStyle}>Store Name *</label>
+                    <input value={newMerchant.name} onChange={e => setNewMerchant({ ...newMerchant, name: e.target.value })} placeholder="e.g. Sathy Ko Pasal" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Suburb *</label>
+                    <input value={newMerchant.suburb} onChange={e => setNewMerchant({ ...newMerchant, suburb: e.target.value })} placeholder="e.g. Auburn" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Email *</label>
+                    <input type="email" value={newMerchant.email} onChange={e => setNewMerchant({ ...newMerchant, email: e.target.value })} placeholder="merchant@email.com" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Phone</label>
+                    <input value={newMerchant.phone} onChange={e => setNewMerchant({ ...newMerchant, phone: e.target.value })} placeholder="04xx xxx xxx" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Category</label>
+                    <select value={newMerchant.category} onChange={e => setNewMerchant({ ...newMerchant, category: e.target.value })} style={inputStyle}>
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>ABN</label>
+                    <input value={newMerchant.abn} onChange={e => setNewMerchant({ ...newMerchant, abn: e.target.value })} placeholder="12 345 678 901" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Login Password (for merchant)</label>
+                    <input type="password" value={newMerchant.password} onChange={e => setNewMerchant({ ...newMerchant, password: e.target.value })} placeholder="Set a login password" style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 20 }}>
+                    <label style={{ ...labelStyle, marginBottom: 0 }}>GST Registered</label>
+                    <button onClick={() => setNewMerchant({ ...newMerchant, gst_registered: !newMerchant.gst_registered })}
+                      style={{ width: 48, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer', background: newMerchant.gst_registered ? 'var(--green)' : '#ccc', position: 'relative', flexShrink: 0 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: newMerchant.gst_registered ? 23 : 3, transition: 'left 0.2s' }} />
+                    </button>
+                    <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{newMerchant.gst_registered ? 'Yes' : 'No'}</span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 14 }}>
+                  <label style={labelStyle}>Description</label>
+                  <input value={newMerchant.description} onChange={e => setNewMerchant({ ...newMerchant, description: e.target.value })} placeholder="Short description of the store" style={inputStyle} />
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={labelStyle}>Store Emoji</label>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: 10, background: 'var(--cream-dark)', borderRadius: 10 }}>
+                    {STORE_EMOJIS.map(e => (
+                      <button key={e} onClick={() => setNewMerchant({ ...newMerchant, emoji: e })}
+                        style={{ fontSize: 24, background: newMerchant.emoji === e ? 'var(--green)' : 'white', border: `2px solid ${newMerchant.emoji === e ? 'var(--green)' : 'var(--border)'}`, borderRadius: 8, width: 44, height: 44, cursor: 'pointer' }}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button className="btn-primary" onClick={handleAddMerchant} disabled={merchantSaving}>
+                    {merchantSaving ? '⏳ Creating...' : 'Create Merchant'}
+                  </button>
+                  <button onClick={() => { setShowAddMerchant(false); setMerchantMsg('') }}
+                    style={{ background: 'var(--cream-dark)', color: 'var(--text-2)', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: selectedMerchant ? '1fr 1fr' : '1fr', gap: 24 }}>
+              <div>
+                {data.merchants.map((m: any) => (
+                  <div key={m.id} onClick={() => { setSelectedMerchant(m); setShowAddMerchant(false); setEditData({ payment_preference: m.payment_preference || 'platform', bank_bsb: m.bank_bsb || '', bank_account: m.bank_account || '', bank_account_name: m.bank_account_name || '', notes: m.notes || '', is_active: m.is_active }) }}
+                    style={{ background: 'white', borderRadius: 16, padding: 16, marginBottom: 12, border: `2px solid ${selectedMerchant?.id === m.id ? 'var(--green)' : 'var(--border)'}`, cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green-dark)' }}>{m.emoji} {m.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{m.suburb} · {m.category} · ID: {m.id}</div>
+                      </div>
                       <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 700, background: m.is_active ? '#e8f5e9' : '#fce4ec', color: m.is_active ? '#2e7d32' : 'var(--red)' }}>
                         {m.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                      {[['Orders', m.total_orders], ['Revenue', `$${m.total_revenue?.toFixed(0)}`], ['Payout', `$${m.total_payout?.toFixed(0)}`]].map(([label, value]) => (
+                        <div key={label} style={{ background: 'var(--cream-dark)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>{value}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text-3)' }}>{label}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                    {[['Orders', m.total_orders], ['Revenue', `$${m.total_revenue?.toFixed(0)}`], ['Payout', `$${m.total_payout?.toFixed(0)}`]].map(([label, value]) => (
-                      <div key={label} style={{ background: 'var(--cream-dark)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>{value}</div>
-                        <div style={{ fontSize: 10, color: 'var(--text-3)' }}>{label}</div>
+                ))}
+              </div>
+
+              {selectedMerchant && (
+                <div>
+                  <h2 style={{ color: 'var(--green-dark)', marginBottom: 16 }}>Edit — {selectedMerchant.name}</h2>
+                  <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid var(--border)', marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 16, textTransform: 'uppercase' }}>Payment Settings</div>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={labelStyle}>Payment Preference</label>
+                      <select value={editData.payment_preference} onChange={e => setEditData({ ...editData, payment_preference: e.target.value })} style={inputStyle}>
+                        <option value="platform">📋 Platform Managed (weekly bank transfer)</option>
+                        <option value="direct">🏦 Direct Stripe Payout</option>
+                      </select>
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={labelStyle}>Account Name</label>
+                      <input value={editData.bank_account_name} onChange={e => setEditData({ ...editData, bank_account_name: e.target.value })} placeholder="e.g. King Spice Pty Ltd" style={inputStyle} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                      <div>
+                        <label style={labelStyle}>BSB</label>
+                        <input value={editData.bank_bsb} onChange={e => setEditData({ ...editData, bank_bsb: e.target.value })} placeholder="062-000" style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Account Number</label>
+                        <input value={editData.bank_account} onChange={e => setEditData({ ...editData, bank_account: e.target.value })} placeholder="12345678" style={inputStyle} />
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={labelStyle}>Internal Notes</label>
+                      <textarea value={editData.notes} onChange={e => setEditData({ ...editData, notes: e.target.value })} placeholder="Notes about this merchant..." rows={2} style={{ ...inputStyle, resize: 'none' }} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--cream-dark)', borderRadius: 10, marginBottom: 16 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>Account Active</div>
+                      <button onClick={() => setEditData({ ...editData, is_active: !editData.is_active })}
+                        style={{ width: 48, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer', background: editData.is_active ? 'var(--green)' : '#ccc', position: 'relative' }}>
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: editData.is_active ? 23 : 3 }} />
+                      </button>
+                    </div>
+                    {saved && <div style={{ background: '#e8f5e9', color: '#2e7d32', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12, fontWeight: 700 }}>✅ Saved!</div>}
+                    <button className="btn-primary" onClick={handleSaveMerchant} disabled={saving}>{saving ? '⏳ Saving...' : 'Save Changes'}</button>
+                  </div>
+                  <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 12, textTransform: 'uppercase' }}>Merchant Details</div>
+                    {[['Email', selectedMerchant.email], ['Phone', selectedMerchant.phone], ['ABN', selectedMerchant.abn || 'Not provided'], ['GST', selectedMerchant.gst_registered ? 'Registered' : 'Not registered']].map(([label, value]) => (
+                      <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                        <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600 }}>{value || '-'}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-            {selectedMerchant && (
-              <div>
-                <h2 style={{ color: 'var(--green-dark)', marginBottom: 16 }}>Edit — {selectedMerchant.name}</h2>
-                <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid var(--border)', marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 16, textTransform: 'uppercase' }}>Payment Settings</div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={labelStyle}>Payment Preference</label>
-                    <select value={editData.payment_preference} onChange={e => setEditData({ ...editData, payment_preference: e.target.value })} style={inputStyle}>
-                      <option value="platform">📋 Platform Managed (weekly bank transfer)</option>
-                      <option value="direct">🏦 Direct Stripe Payout</option>
-                    </select>
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={labelStyle}>Account Name</label>
-                    <input value={editData.bank_account_name} onChange={e => setEditData({ ...editData, bank_account_name: e.target.value })} placeholder="e.g. King Spice Pty Ltd" style={inputStyle} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                    <div>
-                      <label style={labelStyle}>BSB</label>
-                      <input value={editData.bank_bsb} onChange={e => setEditData({ ...editData, bank_bsb: e.target.value })} placeholder="062-000" style={inputStyle} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Account Number</label>
-                      <input value={editData.bank_account} onChange={e => setEditData({ ...editData, bank_account: e.target.value })} placeholder="12345678" style={inputStyle} />
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 16 }}>
-                    <label style={labelStyle}>Internal Notes</label>
-                    <textarea value={editData.notes} onChange={e => setEditData({ ...editData, notes: e.target.value })} placeholder="Notes about this merchant..." rows={2} style={{ ...inputStyle, resize: 'none' }} />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--cream-dark)', borderRadius: 10, marginBottom: 16 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>Account Active</div>
-                    <button onClick={() => setEditData({ ...editData, is_active: !editData.is_active })}
-                      style={{ width: 48, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer', background: editData.is_active ? 'var(--green)' : '#ccc', position: 'relative' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: editData.is_active ? 23 : 3 }} />
-                    </button>
-                  </div>
-                  {saved && <div style={{ background: '#e8f5e9', color: '#2e7d32', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12, fontWeight: 700 }}>✅ Saved!</div>}
-                  <button className="btn-primary" onClick={handleSaveMerchant} disabled={saving}>{saving ? '⏳ Saving...' : 'Save Changes'}</button>
-                </div>
-                <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 12, textTransform: 'uppercase' }}>Merchant Details</div>
-                  {[['Email', selectedMerchant.email], ['Phone', selectedMerchant.phone], ['ABN', selectedMerchant.abn || 'Not provided'], ['GST', selectedMerchant.gst_registered ? 'Registered' : 'Not registered']].map(([label, value]) => (
-                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{value || '-'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -360,8 +492,6 @@ export default function Admin() {
         {activeTab === 'products' && data && (
           <div>
             <h2 style={{ color: 'var(--green-dark)', marginBottom: 16 }}>Product Management</h2>
-
-            {/* Merchant selector */}
             <div style={{ background: 'white', borderRadius: 16, padding: 16, border: '1px solid var(--border)', marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-2)', marginBottom: 10, textTransform: 'uppercase' }}>Select Merchant</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -379,7 +509,6 @@ export default function Admin() {
 
             {productMerchant && (
               <div>
-                {/* Toolbar */}
                 <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green-dark)', flex: 1 }}>
                     {productMerchant.emoji} {productMerchant.name} — {products.length} products
@@ -400,7 +529,6 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Add Product Form */}
                 {showAddProduct && (
                   <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '2px solid var(--green)', marginBottom: 20 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 16 }}>➕ Add New Product</div>
@@ -444,12 +572,10 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* CSV Import */}
                 <div style={{ background: 'white', borderRadius: 16, padding: 16, border: '1px solid var(--border)', marginBottom: 20 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 10 }}>📤 Import Products via CSV</div>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input type="file" accept=".csv" onChange={e => setImportFile(e.target.files?.[0] || null)}
-                      style={{ fontSize: 13, flex: 1 }} />
+                    <input type="file" accept=".csv" onChange={e => setImportFile(e.target.files?.[0] || null)} style={{ fontSize: 13, flex: 1 }} />
                     <button onClick={handleImportCSV} disabled={!importFile || importing}
                       style={{ background: importFile ? 'var(--green)' : '#ccc', color: 'white', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: importFile ? 'pointer' : 'not-allowed' }}>
                       {importing ? '⏳ Importing...' : 'Import CSV'}
@@ -463,7 +589,6 @@ export default function Admin() {
                   )}
                 </div>
 
-                {/* Edit Product Form */}
                 {editingProduct && (
                   <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '2px solid var(--gold)', marginBottom: 20 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 16 }}>✏️ Edit — {editingProduct.name}</div>
@@ -514,7 +639,6 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Products Table */}
                 {loadingProducts ? (
                   <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>⏳ Loading products...</div>
                 ) : products.length === 0 ? (
