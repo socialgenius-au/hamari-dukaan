@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000' // v2
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -492,7 +492,7 @@ export default function Dashboard() {
               {(['incomplete', 'live', 'all'] as const).map(f => (
                 <button key={f} onClick={() => setTaskFilter(f)}
                   style={{
-                    padding: '6px 14px', borderRadius: 99, border: 'none', fontSize: 12, fontWeight: 700,
+                    padding: '6px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700,
                     cursor: 'pointer',
                     background: taskFilter === f ? 'var(--green)' : 'white',
                     color: taskFilter === f ? 'white' : 'var(--text-2)',
@@ -831,4 +831,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
