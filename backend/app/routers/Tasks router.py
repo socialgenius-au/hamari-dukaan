@@ -81,7 +81,7 @@ def get_product_tasks(merchant_id: int, db: Session = Depends(get_db)):
     """
     rows = db.execute(
         text("""
-            SELECT id, name, image_url, description, price, category, stock,
+            SELECT id, name, image_url, description, price, category, stock_qty AS stock,
                    staff_note, note_updated_by, note_updated_at
             FROM products
             WHERE merchant_id = :mid
