@@ -238,7 +238,7 @@ class ProductUpdate(BaseModel):
     emoji: Optional[str] = None
     stock_qty: Optional[int] = None
     is_active: Optional[bool] = None
-
+    barcode: Optional[str] = None
 
 @router.patch("/{product_id}", response_model=ProductOut)
 def update_product(product_id: int, updates: ProductUpdate, db: Session = Depends(get_db)):
