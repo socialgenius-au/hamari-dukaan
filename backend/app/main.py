@@ -2,16 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from app.database import engine, Base
-from app.routers import merchants, products, happyhours, orders, payments, auth, promo, admin, tasks
+from app.routers import merchants, products, happyhours, orders, payments, auth, promo, admin, tasks, image_upload
 import app.models.models as models
 import os
-
 load_dotenv()
-
 models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI(title="Apni Dukaan API", version="1.0.0")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,7 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
-
 app.include_router(merchants.router)
 app.include_router(products.router)
 app.include_router(happyhours.router)
@@ -30,15 +25,13 @@ app.include_router(auth.router)
 app.include_router(promo.router)
 app.include_router(admin.router)
 app.include_router(tasks.router, prefix="/tasks")
-
+app.include_router(image_upload.router)
 @app.get("/")
 def root():
     return {"status": "ok", "message": "Apni Dukaan API is running"}
-
 @app.get("/health")
 def health():
     return {"status": "healthy"}
-
 @app.post("/seed")
 def seed_data(db=__import__('fastapi').Depends(__import__('app.database', fromlist=['get_db']).get_db)):
     from app.models.models import Merchant, Product
