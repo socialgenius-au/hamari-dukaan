@@ -76,7 +76,7 @@ export default function MerchantAuth() {
     <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
       {/* Header */}
       <div style={{ background: 'var(--green-dark)', padding: '24px 16px 28px', textAlign: 'center' }}>
-        <div style={{ fontSize: 24, fontWeight: 700, color: 'white', marginBottom: 4 }}>Apni Dukaan</div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: 'white', marginBottom: 4 }}>Hamari Dukaan</div>
         <div style={{ fontSize: 14, color: 'var(--gold)' }}>اپنی دکان</div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>Merchant Portal</div>
       </div>
@@ -130,7 +130,7 @@ export default function MerchantAuth() {
         {mode === 'register' && (
           <div style={{ background: 'white', borderRadius: 16, padding: '20px', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green-dark)', marginBottom: 4 }}>Register your store</div>
-            <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 16 }}>Join the Apni Dukaan community marketplace</div>
+            <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 16 }}>Join the Hamari Dukaan community marketplace</div>
 
             <div style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', display: 'block', marginBottom: 4 }}>Store Name *</label>
@@ -191,7 +191,7 @@ export default function MerchantAuth() {
             </div>
 
             <div style={{ background: 'var(--cream-dark)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 12, color: 'var(--text-2)', lineHeight: 1.6 }}>
-              By registering you agree to Apni Dukaan's merchant terms — 10% commission on sales up to $4,000/month, 8% above. 1.5% card surcharge passed to customers.
+              By registering you agree to Hamari Dukaan's merchant terms — 10% commission on sales up to $4,000/month, 8% above. 1.5% card surcharge passed to customers.
             </div>
 
             {error && <div style={{ background: '#fce4ec', color: 'var(--red)', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{error}</div>}
@@ -208,7 +208,7 @@ export default function MerchantAuth() {
 
         <button onClick={() => window.location.href = '/'}
           style={{ width: '100%', marginTop: 16, padding: 12, background: 'none', color: 'var(--text-3)', fontSize: 13, border: 'none', cursor: 'pointer' }}>
-          ← Back to Apni Dukaan
+          ← Back to Hamari Dukaan
         </button>
       </div>
     </div>
