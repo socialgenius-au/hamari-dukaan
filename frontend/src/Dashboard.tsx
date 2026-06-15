@@ -288,10 +288,10 @@ export default function Dashboard() {
       } : p))
       setSelectedProduct(prev => prev ? { ...prev, ...editState } : null)
       alert('✅ Product saved!')
+      fetchTasks()
     } catch { alert('Save failed — try again') }
     setSaving(false)
   }
-
   const uploadImage = async (file: File) => {
     if (!selectedProduct) return
     setUploadingImage(true)
