@@ -224,8 +224,15 @@ def download_template():
 
 @router.get("/merchant/{merchant_id}", response_model=List[ProductOut])
 def get_merchant_products(merchant_id: int, db: Session = Depends(get_db)):
-    return db.query(Product).filter(Product.merchant_id == merchant_id).all()
-
+    return db.query(Product).filter(
+        Product.merchant_id == merchant_id,
+        Product.is_active == True,
+        Product.image_url != None,
+        Product.description != None,
+        Product.price != None,
+        Product.category != None,
+        Product.stock_qty > 0
+    ).all()
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
