@@ -212,7 +212,7 @@ export default function App() {
         <button className="desktop-nav-item" onClick={() => window.location.href='/merchant'}>Merchant Portal</button>
       </div>
       <div className="top-bar">
-        <div className="top-bar-logo">Apni Dukaan <span>اپنی دکان</span></div>
+        <div className="top-bar-logo">Hamari Dukaan <span>ہماری دکان </span></div>
         <input className="search-bar" placeholder="Search products, merchants..." value={search} onChange={e => setSearch(e.target.value)} />
         <button style={{ background: 'none', color: 'white', position: 'relative', flexShrink: 0, border: 'none', cursor: 'pointer' }} onClick={() => setCartOpen(true)}>
           <IconCart />
@@ -253,7 +253,7 @@ export default function App() {
               <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-3)' }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>🏪</div>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>No merchants yet</div>
-                <div style={{ fontSize: 13 }}>Be the first to join Apni Dukaan</div>
+                <div style={{ fontSize: 13 }}>Be the first to join Hamari Dukaan</div>
                 <button onClick={() => window.location.href = '/merchant'}
                   style={{ marginTop: 16, background: 'var(--green)', color: 'white', border: 'none', borderRadius: 10, padding: '12px 24px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                   Register Your Store →
