@@ -7,7 +7,7 @@ import app.models.models as models
 import os
 load_dotenv()
 models.Base.metadata.create_all(bind=engine)
-app = FastAPI(title="Apni Dukaan API", version="1.0.0")
+app = FastAPI(title="Hamari Dukaan API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,7 +28,7 @@ app.include_router(tasks.router, prefix="/tasks")
 app.include_router(image_upload.router)
 @app.get("/")
 def root():
-    return {"status": "ok", "message": "Apni Dukaan API is running"}
+    return {"status": "ok", "message": "Hamari Dukaan API is running"}
 @app.get("/health")
 def health():
     return {"status": "healthy"}
