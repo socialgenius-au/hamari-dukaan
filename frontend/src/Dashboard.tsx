@@ -292,6 +292,7 @@ export default function Dashboard() {
     } catch { alert('Save failed — try again') }
     setSaving(false)
   }
+
   const uploadImage = async (file: File) => {
     if (!selectedProduct) return
     setUploadingImage(true)
@@ -425,8 +426,8 @@ export default function Dashboard() {
             <div style={{
               width: '100%', height: 140, background: '#f5f5f5', borderRadius: 12,
               border: '2px dashed var(--border)', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', marginBottom: 8
-            }} onClick={() => fileInputRef.current?.click()}>
+              justifyContent: 'center', cursor: 'default', overflow: 'hidden', marginBottom: 8
+            }}>
               {editState.previewImageUrl ? (
                 <img src={editState.previewImageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
