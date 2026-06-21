@@ -1,7 +1,7 @@
 {
-  "id": "au.apnidukaan.app",
-  "name": "Apni Dukaan — اپنی دکان",
-  "short_name": "Apni Dukaan",
+  "id": "au.hamaridukaan.app",
+  "name": "Hamari Dukaan — ہماری دکان",
+  "short_name": "Hamari Dukaan",
   "description": "Halal · Fresh · Local — Community marketplace for South Asian and halal groceries in Sydney",
   "start_url": "/",
   "display": "standalone",
@@ -28,7 +28,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Apni Dukaan — Halal Community Marketplace"
+      "label": "Hamari Dukaan — Halal Community Marketplace"
     }
   ],
   "categories": ["shopping", "food", "lifestyle"],
