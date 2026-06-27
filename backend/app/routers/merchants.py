@@ -63,7 +63,7 @@ def get_merchant_products(merchant_id: int, db: Session = Depends(get_db)):
     products = db.query(Product).filter(
         Product.merchant_id == merchant_id,
         Product.is_active == True,
-        Product.image_url != None,
+        # Product.image_url != None,  # temporarily disabled
         Product.description != None,
         Product.price != None,
         Product.category != None,
