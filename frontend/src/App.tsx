@@ -32,7 +32,7 @@ const IconCart = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 
 type CartItem = { id: number; name: string; price: number; emoji: string; qty: number }
 type Merchant = { id: number; name: string; suburb: string; category: string; emoji: string; description?: string; phone?: string; stripe_connected: boolean }
-type Product = { id: number; merchant_id: number; name: string; price: number; emoji: string; category?: string; stock_qty: number }
+type Product = { id: number; merchant_id: number; name: string; price: number; emoji: string; category?: string; stock_qty: number; image_url?: string | null; description?: string | null }
 type HappyHour = { id: number; merchant_id: number; title: string; description?: string; discount_percent: number; max_orders: number; orders_taken: number; start_time: string; end_time: string }
 
 export default function App() {
