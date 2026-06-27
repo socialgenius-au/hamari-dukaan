@@ -146,7 +146,7 @@ export default function App() {
             <div className="product-grid">
               {merchantProducts.map(p => (
                 <div key={p.id} className="product-card">
-                  <div className="product-img">{p.emoji}</div>
+                  <div className="product-img">{p.image_url ? <img src={p.image_url} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"8px"}} /> : <div style={{fontSize:40}}>{p.emoji || "📦"}</div>}</div>
                   <div className="product-info">
                     <div className="product-name">{p.name}</div>
                     <div className="product-price">${p.price.toFixed(2)}</div>
