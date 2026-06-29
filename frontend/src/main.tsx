@@ -7,6 +7,7 @@ import MerchantAuth from './MerchantAuth.tsx'
 import Dashboard from './Dashboard.tsx'
 import MerchantSettings from "./MerchantSettings.tsx"
 import Admin from "./Admin.tsx"
+import BulkEditor from "./BulkEditor.tsx"
 import './index.css'
 
 const path = window.location.pathname
@@ -18,7 +19,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
      path === '/merchant' ? <MerchantAuth /> :
      path === "/dashboard" ? <Dashboard /> :
      path === "/settings" ? <MerchantSettings /> :
-     path === "/admin" ? <Admin />  :
+     path === "/admin" ? <Admin /> :
+     path === "/staff/bulk-editor" ? <BulkEditor /> :
      <App />}
   </React.StrictMode>,
 )
